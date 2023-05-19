@@ -23,18 +23,16 @@ class ConfigParser():
         return config
     
     def get_targets(self, config):
-        snmp1 = []
-        snmp2 = []
+        snmp_info = []
         snmp_dict = {}
         for snmp_section in config.sections():
             if snmp_section.startswith('SNMP-'):
                 for (k,v) in config.items(snmp_section):
                     snmp_dict[k] = v
-                    snmp2.append({snmp_section: snmp_dict['device']})
-                #temp_target = snmp_dict.copy()
-                #snmp1.append(temp_target)
-        print(snmp2)
-        return snmp2
+                    snmp_info.append({snmp_section: snmp_dict['device']})
+
+        print(snmp_info)
+        return snmp_info
 
 
 
@@ -44,9 +42,6 @@ class SNMPCollector(object):
         self.c = ConfigParser()
 
     def collect(self):
-        
-        #print("test123") 
-        old_metric_name = ''
         for device in self.c.targets:
             success = False
             
@@ -59,10 +54,9 @@ class SNMPCollector(object):
                 name = values[4]
                 description = values[5]
                 hostname = values[6]
-                print(f'{old_metric_name} + {name}')
-                #if old_metric_name != name:
+
                 g_metric = GaugeMetricFamily(name, description, labels=['instance'])
-                old_metric_name = name
+
                 for (errorIndication,
                     errorStatus,
                     errorIndex,
@@ -74,7 +68,6 @@ class SNMPCollector(object):
                                         lookupMib=False,
                                         lexicographicMode=False):
                     if errorIndication:
-                        print('test')
                         print(errorIndication, file=sys.stderr)
                         
                     elif errorStatus:
@@ -83,6 +76,8 @@ class SNMPCollector(object):
                         
                     else:
                         for varBind in varBinds:
+                            #k is the OID
+                            #v is the value of that OID, can be 5 for exmaple
                             k, v = varBind
                             print('%s = %s' % varBind)
                             success = True
@@ -91,12 +86,11 @@ class SNMPCollector(object):
                     else: 
                         print(f'could not get snmp for: {device}')
                         #comment out this line when not testing
+                        #it adds metric for failed snmpwalks
                         g_metric.add_metric(labels=[f'DEBUG_failed_for_{hostname}'],value=0)
             yield g_metric
-            #k is the OID
-            #v is the value of that OID, can be 5 for exmaple
+           
         
-    #    print(varBinds)
 
 if __name__ == '__main__':
     registry = CollectorRegistry()
