@@ -3,7 +3,8 @@ Does an snmpget on specified devices and converts into prometheus metrics hosted
 Ready for the taking, I mean scraping.
 
 ## edit config.ini
-A bit messy but just add more entries in the config.ini file as instructed
+A bit messy but just add more entries in the config.ini file as instructed inside.
+TODO: Segment to configuration file into more readable form.
 
 ## Output of a curl requsts
 Each entry in the config file will be its own metric
